@@ -162,5 +162,9 @@
     "google-imagenet1k-per10": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
+    },
+    "nki-mammos": {
+        "train": ["/projects/mskcc-oncotype/datasets/pretrain/nki-breast-mg-manifest.json", "<lbl_path>"],
+        "val": ["/projects/mskcc-oncotype/datasets/pretrain/nki-breast-mg-manifest.json", "<lbl_path>"]
     }
 }

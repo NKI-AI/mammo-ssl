@@ -99,3 +99,7 @@ website/pages/tutorials/*
 # Configs for local development
 configs/config/config_local/*
 train_config.yaml
+
+.flake8
+bufwritepost.vimhook.sh
+rsync.excludes

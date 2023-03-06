@@ -45,7 +45,11 @@ class MammoNKIDataset(Dataset):
 
         mg = Mammogram(mammo["fn"])
         try:
-            pixels = transforms.ToTensor()(mg.as_pil).float()
+            mg_pil = mg.as_pil
+            width, height = mg_pil.size
+            rescale_factor = mg.spacing / self.cfg["DATA"][self.split].REFERENCE_SPACING
+            mg_pil = mg_pil.resize((int(rescale_factor * width), int(rescale_factor * height)))
+            pixels = transforms.ToTensor()(mg_pil).float()
 
             if (
                 pixels.shape[1] < self.crop_dims[0]
@@ -57,7 +61,7 @@ class MammoNKIDataset(Dataset):
             return img, False
 
         try:
-            bounding_box = self._find_largest_bbox(mg)
+            bounding_box = self._find_largest_bbox(mg_pil)
         except ValueError:
             bounding_box = [
                 pixels.shape[1] // 2 - self.crop_dims[0] // 2,
@@ -79,6 +83,7 @@ class MammoNKIDataset(Dataset):
             pixels_pil, black=(0, 0, 0), white=(255, 255, 255)
         )
 
+        assert list(pixels_pil_rgb.size) == self.crop_dims, f"wrong dimensions: {pixels_pil_rgb.size} - {self.crop_dims}"
         return pixels_pil_rgb, True
 
     def get_crop_location(self, pixels_shape, bounding_box):
@@ -94,11 +99,7 @@ class MammoNKIDataset(Dataset):
         if bounding_box[3] < self.crop_dims[1]:
             left_min = max(0, bounding_box[1] + bounding_box[3] - self.crop_dims[1])
             left_max = min(pixels_shape[2] - self.crop_dims[1], bounding_box[1])
-            try:
-                left = random.randint(left_min, left_max)
-            except ValueError:
-                breakpoint()
-                exit()
+            left = random.randint(left_min, left_max)
         else:
             left = bounding_box[1] + random.randint(
                 0, bounding_box[3] - self.crop_dims[1]
@@ -106,10 +107,9 @@ class MammoNKIDataset(Dataset):
 
         return top, left
 
-    def _find_largest_bbox(self, mammo: Mammogram):
+    def _find_largest_bbox(self, pil):
+        pix = np.array(pil)
         # threshold
-        pix = np.array(mammo.as_pil)
-
         thresh = cv2.threshold(pix, 2, 255, cv2.THRESH_BINARY)[1]
 
         # get contour bounding boxes and draw on copy of input

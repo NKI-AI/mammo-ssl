@@ -40,6 +40,7 @@ config:
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DROP_LAST: True
       CROP_DIMS: [400, 400]
+      REFERENCE_SPACING: 0.1
       DEFAULT_GRAY_IMG_SIZE: 400
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step

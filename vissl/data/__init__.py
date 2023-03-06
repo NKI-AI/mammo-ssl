@@ -28,6 +28,8 @@ from vissl.data.synthetic_dataset import SyntheticImageDataset
 from vissl.data.torchvision_dataset import TorchvisionDataset
 from vissl.utils.misc import set_dataloader_seeds, setup_multiprocessing_method
 
+from vissl.data.mammo_nki_dataset import MammoNKIDataset
+
 
 __all__ = [
     "AirstoreDataset",
@@ -43,6 +45,7 @@ DATASET_SOURCE_MAP = {
     "disk_folder": DiskImageDataset,
     "torchvision_dataset": TorchvisionDataset,
     "synthetic": SyntheticImageDataset,
+    "mammograms": MammoNKIDataset,
 }
 
 

@@ -19,13 +19,13 @@ config:
     TRAIN:
       DATA_SOURCES: [mammograms]
       DATASET_NAMES: [nki-mammos]
-      BATCHSIZE_PER_REPLICA: 100
+      BATCHSIZE_PER_REPLICA: 38
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgReplicatePil
           num_times: 2
         - name: RandomResizedCrop
-          size: 224
+          size: 400
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilGaussianBlur
@@ -37,9 +37,9 @@ config:
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
       DROP_LAST: True
-      CROP_DIMS: [400, 400]
+      CROP_DIMS: [600, 600]
       REFERENCE_SPACING: 0.1
-      DEFAULT_GRAY_IMG_SIZE: 400
+      DEFAULT_GRAY_IMG_SIZE: 600
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   METERS:
@@ -62,6 +62,8 @@ config:
       USE_AMP: False
       # USE_AMP: True
       AMP_ARGS: {"opt_level": "O1"}
+    WEIGHTS_INIT:
+      PARAMS_FILE: "/home/jbrunekreef/weights/resnet_simclr.torch"
   LOSS:
       name: simclr_info_nce_loss
       simclr_info_nce_loss:
@@ -85,7 +87,7 @@ config:
       # num_epochs: 600
       # num_epochs: 800
       # num_epochs: 1000
-      num_epochs: 100000
+      num_epochs: 10000
       # num_epochs: 1
       # num_epochs: 2
       # num_epochs: 5
@@ -107,13 +109,14 @@ config:
               end_value: 0.0000
           update_interval: step
           interval_scaling: [rescaled, fixed]
-          lengths: [0.1, 0.9]                 # 100ep
+          # lengths: [0.1, 0.9]                 # 100ep
           # lengths: [0.05, 0.95]             # 200ep
           # lengths: [0.025, 0.975]           # 400ep
           # lengths: [0.02, 0.98]             # 500ep
           # lengths: [0.0166667, 0.9833333]   # 600ep
           # lengths: [0.0125, 0.9875]         # 800ep
           # lengths: [0.01, 0.99]             # 1000ep
+          lengths: [0.005, 0.995]             # 1000ep
           # lengths: [0.0128, 0.9872]         # 1ep IG-1B
           # lengths: [0.00641, 0.99359]       # 2ep IG-1B
           # lengths: [0.002563, 0.997437]     # 5ep IG-1B = 50 ep IG-100M
@@ -127,7 +130,7 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "/home/jbrunekreef/logs/ssl-mlo"
+    DIR: "/home/jbrunekreef/logs/ssl-400-imagenet"
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 5
+    CHECKPOINT_FREQUENCY: 50
     CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations

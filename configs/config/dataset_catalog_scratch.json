@@ -164,7 +164,7 @@
         "val": ["<img_path>", "<lbl_path>"]
     },
     "nki-mammos": {
-        "train": ["/home/jbrunekreef/datasets/nki-breast-small/manifest-breast-home.json", "<lbl_path>"],
-        "val": ["/home/jbrunekreef/datasets/nki-breast-small/manifest-breast-home.json", "<lbl_path>"]
+        "train": ["/home/jbrunekreef/datasets/nki-breast-small/manifest-local.json", "<lbl_path>"],
+        "val": ["/home/jbrunekreef/datasets/nki-breast-small/manifest-local.json", "<lbl_path>"]
     }
 }

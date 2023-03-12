@@ -36,6 +36,8 @@ class MammoNKIDataset(Dataset):
             mammos = json.load(mfp)
 
         # mammos = mammos[:100000]
+        if self.cfg["DATA"]["TRAIN"]["MLO_ONLY"]:
+            mammos = [_ for _ in mammos if _["view"] == "MLO"]
 
         self.mammos = mammos
         self._num_samples = len(self.mammos)

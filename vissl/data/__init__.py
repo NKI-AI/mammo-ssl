@@ -200,6 +200,7 @@ def build_dataloader(
         sampler=data_sampler,
         drop_last=dataset_config["DROP_LAST"],
         worker_init_fn=worker_init_fn,
+        persistent_workers=True,
     )
     enable_async_gpu_copy = dataset.cfg["DATA"]["ENABLE_ASYNC_GPU_COPY"]
     dataloader = wrap_dataloader(dataloader, enable_async_gpu_copy, device)

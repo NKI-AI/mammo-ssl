@@ -10,7 +10,11 @@ source /home/${USER}/.bashrc
 pwd
 conda activate visslmammo
 which python
+mkdir /scratch/jwb
+mkdir /scratch/jwb/nki-breast-small
+
+rsync -av /home/jbrunekreef/datasets/nki-breast-small/ /scratch/jwb/nki-breast-small/
 
 echo "klaar"
-export VISSL_DATASET_CATALOG_PATH="configs/config/dataset_catalog.json"
+export VISSL_DATASET_CATALOG_PATH="configs/config/dataset_catalog_scratch.json"
 python tools/run_distributed_engines.py config=pretrain/mammo/moco_resnet_400_imagenet_allviews.yaml

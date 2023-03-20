@@ -46,6 +46,11 @@ class MammoNKIDataset(Dataset):
         mammo = self.mammos[index]
 
         mg = Mammogram(mammo["fn"])
+        if len(mg.available_luts) == 0:
+            img = get_mean_image(self.cfg["DATA"][self.split].DEFAULT_GRAY_IMG_SIZE)
+            return img, False
+
+        mg.set_random_lut()
         try:
             mg_pil = mg.as_pil
             width, height = mg_pil.size

@@ -17,4 +17,4 @@ rsync -av /home/jbrunekreef/datasets/nki-breast-small/ /scratch/jwb/nki-breast-s
 
 echo "klaar"
 export VISSL_DATASET_CATALOG_PATH="configs/config/dataset_catalog_scratch.json"
-python tools/run_distributed_engines.py config=pretrain/mammo/moco_resnet_400_imagenet_allviews.yaml
+python tools/run_distributed_engines.py config=pretrain/mammo/moco_resnet_400_imagenet_allviews_jitter.yaml

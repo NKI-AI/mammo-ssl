@@ -34,6 +34,13 @@ config:
           radius_max: 2.0
         - name: RandomHorizontalFlip
           p: 0.5
+        - name: RandomVerticalFlip
+          p: 0.5
+        - name: ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.0
         - name: ToTensor
       COLLATE_FUNCTION: moco_collator
       MMAP_MODE: True
@@ -95,7 +102,7 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "/home/jbrunekreef/logs/ssl-moco-400-imagenet-allviews"
+    DIR: "/home/jbrunekreef/logs/ssl-moco-400-imagenet-allviews-jitter/"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 50
     CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations

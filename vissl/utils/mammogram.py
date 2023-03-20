@@ -1,9 +1,13 @@
-import json
+from typing import cast, List, Tuple
 import pydicom
 import PIL.Image
-from pathlib import Path
 import numpy as np
 from functools import cached_property
+from torch.utils.data import Dataset
+from enum import Enum
+import random
+
+VOI_LUT = Enum('VOI_LUT', ['function', 'sequence'])
 
 
 def mammogram_to_pil(image, resize=False):
@@ -160,11 +164,11 @@ class Mammogram:
         self.window_center = None
         self.window_width = None
         self.num_windows = 0
-        self.num_vois = 0
-        self.num_luts = 0
+        self.num_lut_funcs = 0
+        self.num_lut_seqs = 0
 
-        self.__voi_index = None
-        self.__lut_index = None
+        self.__lut_func_index = None
+        self.__lut_seq_index = None
 
         self._flip_if_required = flip_if_required
 
@@ -194,7 +198,7 @@ class Mammogram:
     @property
     def raw_array_as_pil(self):
         return mammogram_to_pil(self.raw_array)
-    
+
     @property
     def spacing(self):
         spacing = getattr(self._dcm_obj, "PixelSpacing", None)
@@ -225,25 +229,25 @@ class Mammogram:
 
         array = self.raw_array.copy()
 
-        if self.num_luts > 0 or self.num_vois > 0:
-            if self.__voi_index is None and self.__lut_index is None:
+        if self.num_lut_funcs > 0 or self.num_lut_seqs > 0:
+            if self.__lut_func_index is None and self.__lut_seq_index is None:
                 raise RuntimeError("Need to select a VOI or LUT")
 
-        if self.__voi_index is not None:  # Takes precedence
+        if self.__lut_func_index is not None:  # Takes precedence
             array = pydicom.pixel_data_handlers.apply_voi(
-                array, self._dcm_obj, index=self.__voi_index
+                array, self._dcm_obj, index=self.__lut_func_index
             )
 
-        elif self.__lut_index:
-            array = apply_windowing(array, self._dcm_obj, index=self.__lut_index)
+        elif self.__lut_seq_index:
+            array = apply_windowing(array, self._dcm_obj, index=self.__lut_seq_index)
 
         # Photometric
-        if self.__lut_index is not None and self._requires_inversion:
+        if self.__lut_seq_index is not None and self._requires_inversion:
             print(
                 f"Not sure what is happening here: {self._filename}. Requires inversion. Ignoring."
             )
 
-        if self.__lut_index is None:
+        if self.__lut_seq_index is None:
             if self._requires_inversion:
                 array = array.max() - array
 
@@ -252,15 +256,13 @@ class Mammogram:
 
         return array
 
-    @cached_property
+    @property
     def as_pil(self):
-        has_lut = True
-        if self.num_vois > 0:
-            self.set_voi(self.num_vois // 2)
-        elif self.num_luts > 0:
-            self.set_lut(self.num_luts // 2)
-        else:
-            has_lut = False
+        if not self.lut_set:
+            if self.num_lut_funcs > 0:
+                self.set_lut_func(self.num_lut_funcs // 2)
+            elif self.num_lut_seqs > 0:
+                self.set_lut_seq(self.num_lut_seqs // 2)
 
         image = self.array
         if not image.ndim == 2:
@@ -295,19 +297,24 @@ class Mammogram:
     def _requires_inversion(self):
         return getattr(self._dcm_obj, "PhotometricInterpretation", "") == "MONOCHROME1"
 
-    def set_voi(self, idx):
-        self.unset_lut()
-        self.__voi_index = idx
+    @property
+    def lut_set(self):
+        return not (self.__lut_func_index is None
+                    and self.__lut_seq_index is None)
 
-    def unset_voi(self):
-        self.__voi_index = None
+    def set_lut_func(self, idx):
+        self.unset_lut_seq()
+        self.__lut_func_index = idx
 
-    def set_lut(self, idx):
-        self.unset_voi()
-        self.__lut_index = idx
+    def unset_lut_func(self):
+        self.__lut_func_index = None
 
-    def unset_lut(self):
-        self.__lut_index = None
+    def set_lut_seq(self, idx):
+        self.unset_lut_func()
+        self.__lut_seq_index = idx
+
+    def unset_lut_seq(self):
+        self.__lut_seq_index = None
 
     def _parse_window_levels(self):
         # TODO: A check that window_center and width are the same length
@@ -321,25 +328,35 @@ class Mammogram:
 
         self.window_center = window_center
         self.window_width = window_width
-        self.num_vois = len(window_center) if window_center is not None else 0
+        self.num_lut_funcs = len(window_center) if window_center is not None else 0
 
     def _parse_lookup_tables(self):
         voi_lut_sequence = self._dcm_obj.get("VOILUTSequence", None)
         if voi_lut_sequence is None:
-            self.num_luts = 0
+            self.num_lut_seqs = 0
         else:
-            self.num_luts = len(voi_lut_sequence)
+            self.num_lut_seqs = len(voi_lut_sequence)
 
+    @property
+    def available_luts(self):
+        lut_funcs = []
+        for i in range(self.num_lut_funcs):
+            lut_funcs.append((VOI_LUT.function, i))
 
-def get_pil(path):
-    mammogram = Mammogram(path)
-    #     print(f"VOIs: {mammogram.num_vois}, Num luts: {mammogram.num_luts}")
-    has_lut = True
-    if mammogram.num_vois > 0:
-        mammogram.set_voi(mammogram.num_vois // 2)
-    elif mammogram.num_luts > 0:
-        mammogram.set_lut(mammogram.num_luts // 2)
-    else:
-        has_lut = False
+        lut_seqs = []
+        for i in range(self.num_lut_seqs):
+            lut_seqs.append((VOI_LUT.sequence, i))
 
-    return mammogram.as_pil, has_lut
+        return lut_funcs + lut_seqs
+
+    def set_lut(self, lut: Tuple):
+        if lut[0] == VOI_LUT.function:
+            self.set_lut_func(lut[1])
+        elif lut[0] == VOI_LUT.sequence:
+            self.set_lut_seq(lut[1])
+
+    def set_random_lut(self):
+        luts = self.available_luts
+
+        rand_lut = random.choice(luts)
+        self.set_lut(rand_lut)

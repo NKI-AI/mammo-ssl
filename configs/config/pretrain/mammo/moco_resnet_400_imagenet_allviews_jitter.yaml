@@ -16,8 +16,11 @@ config:
         LOG_PARAMS: False
         LOG_PARAMS_GRADIENTS: False
         FLUSH_EVERY_N_MIN: 20
+    EXPORT_IMAGE:
+        EXPORT: True
+        OUTPUT_DIR: "/home/j.brunekreef/tmp/vissl-test-export/"
   DATA:
-    NUM_DATALOADER_WORKERS: 8
+    NUM_DATALOADER_WORKERS: 0
     TRAIN:
       DATA_SOURCES: [mammograms]
       DATASET_NAMES: [nki-mammos]
@@ -36,11 +39,13 @@ config:
           p: 0.5
         - name: RandomVerticalFlip
           p: 0.5
-        - name: ColorJitter
-          brightness: 0.4
-          contrast: 0.4
-          saturation: 0.4
-          hue: 0.0
+        - name: ImgPilRandomColorJitter
+          p: 0.8
+          strength: 1.0
+          # brightness: 0.4
+          # contrast: 0.4
+          # saturation: 0.4
+          # hue: 0.4
         - name: ToTensor
       COLLATE_FUNCTION: moco_collator
       MMAP_MODE: True
@@ -70,7 +75,7 @@ config:
     AMP_PARAMS:
       USE_AMP: False
     WEIGHTS_INIT:
-      PARAMS_FILE: "/home/jbrunekreef/weights/resnet_moco.torch"
+      PARAMS_FILE: "/home/j.brunekreef/weights/resnet_moco.torch"
   LOSS:
       name: moco_loss
       moco_loss:
@@ -96,13 +101,13 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 4
+    NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "/home/jbrunekreef/logs/ssl-moco-400-imagenet-allviews-jitter/"
+    DIR: "/projects/mskcc-oncotype/training-data/rhpc/ssl-moco-400-imagenet-allviews-jitter/"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 50
     CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations

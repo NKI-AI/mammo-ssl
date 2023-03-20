@@ -39,6 +39,8 @@ from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
 
+from vissl.hooks.export_image import ExportImageHook
+
 
 class SSLClassyHookFunctions(Enum):
     """
@@ -142,6 +144,10 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
                 )
             ]
         )
+
+    if cfg.HOOKS.EXPORT_IMAGE.EXPORT:
+        ei_hook = ExportImageHook(output_dir=cfg.HOOKS.EXPORT_IMAGE.OUTPUT_DIR)
+        hooks.extend([ei_hook])
 
     # hooks that are used irrespective of workflow type
     rolling_btime_freq = (

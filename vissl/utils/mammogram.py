@@ -270,7 +270,7 @@ class Mammogram:
         image_max = image.max()
         image_min = image.min()
 
-        output = (((image - image_min) / (image_max - image_min)) * 255).astype(
+        output = (((image - image_min) / (image_max - image_min + 0.0001)) * 255).astype(
             np.uint8
         )
         pil_image = PIL.Image.fromarray(output, mode="L")

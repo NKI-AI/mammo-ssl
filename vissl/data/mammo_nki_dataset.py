@@ -73,6 +73,8 @@ class MammoNKIDataset(Dataset):
             bounding_box = [
                 pixels.shape[1] // 2 - self.crop_dims[0] // 2,
                 pixels.shape[2] // 2 - self.crop_dims[1] // 2,
+                1,
+                1,
             ]
 
         top = 0
